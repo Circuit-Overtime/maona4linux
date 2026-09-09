@@ -1,0 +1,11 @@
+# Timestamped host diagnostic bundles can contain identifying system data.
+/captures/linux/[0-9]*/
+/captures/windows/*.pcapng
+
+# Local audio test recordings.
+*.wav
+
+# Editor and OS files.
+.DS_Store
+*.swp
+
