@@ -1,19 +1,26 @@
-# maona4linux
+# MAONO USB Microphone Support on Linux
 
-Linux investigation and support tooling for the MAONO/DCMT USB Condenser Microphone identified by USB VID/PID `31b2:0011`.
+Compatibility notes and diagnostic tools for the MAONO/DCMT USB Condenser Microphone identified by USB VID/PID `31b2:0011`.
 
 The device already exposes standard USB Audio interfaces and Linux binds them to `snd-usb-audio`. It also exposes a HID interface handled by `usbhid`. This project begins by finding the layer that actually fails; it will not replace the standard audio stack without evidence that the transport is non-standard.
 
-## Current status
+## Status: natively supported
 
-The investigation is at the evidence-gathering stage. Reports so far show:
+No custom audio driver is required. Linux handles the microphone through the standard `snd-usb-audio` driver. Hardware testing confirmed clear 16-bit raw ALSA recording and successful packed 24-bit capture at 48 kHz.
+
+Verified behavior:
 
 - USB Audio interfaces `0` and `1`;
 - HID interface `3`, with interface `2` absent;
 - Linux warnings about the non-contiguous interface numbering;
-- an ALSA capture device and a PipeWire mono source.
+- automatic ALSA card/device discovery;
+- clear `S16_LE`, mono, 48 kHz recording;
+- successful `S24_3LE`, mono, 48 kHz recording;
+- advertised sample rates from 44.1 through 192 kHz.
 
-These observations do not yet prove that a kernel quirk is necessary. Follow the work in the [project roadmap](https://github.com/Circuit-Overtime/maona4linux/issues/9).
+The interface-number warning does not prevent audio capture on the tested system. The recommended production setting is packed 24-bit mono at 48 kHz. Higher sample rates increase storage and processing requirements without normally improving voice recording.
+
+See the [compatibility result](docs/compatibility.md) for the verified details.
 
 ## Collect diagnostics
 
