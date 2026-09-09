@@ -130,22 +130,39 @@ find_capture_devices() {
     done
 }
 
+preferred_format() {
+    local descriptor=$1
+    local candidate
+
+    for candidate in S24_3LE S24_LE S32_LE S16_LE; do
+        if awk -v format="$candidate" '$1 == "Format:" && $2 == format { found = 1 } END { exit !found }' "$descriptor"; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
 descriptor_value() {
     local label=$1
-    local descriptor=$2
+    local format=$2
+    local descriptor=$3
 
-    awk -v label="$label" '
+    awk -v label="$label" -v format="$format" '
         /^Capture:/ { capture = 1; next }
-        capture && $1 == label ":" { print $2; exit }
+        capture && $1 == "Format:" { selected = ($2 == format); next }
+        selected && $1 == label ":" { print $2; exit }
     ' "$descriptor"
 }
 
 descriptor_rate() {
-    local descriptor=$1
+    local format=$1
+    local descriptor=$2
 
-    awk '
+    awk -v format="$format" '
         /^Capture:/ { capture = 1; next }
-        capture && $1 == "Rates:" {
+        capture && $1 == "Format:" { selected = ($2 == format); next }
+        selected && $1 == "Rates:" {
             line = $0
             if (line ~ /(^|[^0-9])48000([^0-9]|$)/) {
                 print 48000
@@ -196,9 +213,9 @@ descriptor="$PROC_ASOUND_ROOT/card${card}/stream${device}"
 [[ -r "$descriptor" ]] || die "stream descriptor is not readable: $descriptor"
 cp -- "$descriptor" "$result_dir/stream${device}.txt" || die "cannot save the stream descriptor"
 
-format=$(descriptor_value Format "$descriptor")
-channels=$(descriptor_value Channels "$descriptor")
-rate=$(descriptor_rate "$descriptor")
+format=$(preferred_format "$descriptor")
+channels=$(descriptor_value Channels "$format" "$descriptor")
+rate=$(descriptor_rate "$format" "$descriptor")
 
 [[ -n "$format" ]] || die "no advertised capture format found in $descriptor"
 [[ "$channels" =~ ^[1-9][0-9]*$ ]] || die "no advertised capture channel count found in $descriptor"
