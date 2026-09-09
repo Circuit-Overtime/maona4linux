@@ -33,6 +33,16 @@ The collector is read-only: it does not change mixer settings, send HID reports,
 
 Before publishing a bundle, review it for hostnames, usernames, USB serial numbers, unrelated audio devices, and application metadata. Do not attach a bundle you have not inspected.
 
+## Test raw ALSA capture
+
+After collecting diagnostics, bypass PipeWire and record directly from the dynamically discovered ALSA device:
+
+```bash
+./scripts/alsa-test.sh
+```
+
+See [docs/testing.md](docs/testing.md) for result interpretation.
+
 ## Design constraints
 
 - Match the device by VID/PID, never by its product string alone.
